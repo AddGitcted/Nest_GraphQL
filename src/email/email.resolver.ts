@@ -56,4 +56,9 @@ export class EmailResolver {
   ): Promise<UserEmail> {
     return this._service.addEmail(newEmail);
   }
+
+  @Mutation(() => ID)
+  removeEmail(@Args() { emailId }: EmailIdArgs): Promise<EmailId> {
+    return this._service.removeEmail(emailId);
+  }
 }

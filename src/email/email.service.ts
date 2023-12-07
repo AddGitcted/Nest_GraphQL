@@ -41,4 +41,9 @@ export class EmailService {
     const savedUserEmail = await this.emailRepository.save(userEmail);
     return savedUserEmail;
   }
+
+  async removeEmail(emailId: EmailId): Promise<EmailId> {
+    await this.emailRepository.delete(emailId);
+    return emailId;
+  }
 }

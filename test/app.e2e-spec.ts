@@ -34,6 +34,10 @@ const knownUser = {
 };
 
 const [email1, email2, email3] = knownUser.emails;
+const newEmail = {
+  userId: knownUserId,
+  address: 'test4@upcse-integration.coop',
+};
 
 describe('Tests e2e', () => {
   let app: INestApplication;
@@ -207,7 +211,7 @@ describe('Tests e2e', () => {
             expect(
               res.body.errors?.[0]?.extensions?.originalError?.message,
             ).toContain(
-              "La date de naissance ne peut pas être définie dans le future",
+              'La date de naissance ne peut pas être définie dans le future',
             );
           });
       });
@@ -266,11 +270,6 @@ describe('Tests e2e', () => {
 
     describe('[Mutation] addEmail', () => {
       it(`[13] Devrait ajouter un nouvel e-mail à un utilisateur actif`, () => {
-        const newEmail = {
-          userId: knownUserId,
-          address: 'test4@upcse-integration.coop',
-        };
-
         return request(app.getHttpServer())
           .post('/graphql')
           .send({
@@ -283,7 +282,7 @@ describe('Tests e2e', () => {
             expect(res.body.data.addEmail.address).toBe(newEmail.address);
           });
       });
-      it(`[14] Devrait retourner une erreur lors de l'ajout d'un e-mail à un utilisateur inactif`,  async () => {
+      it(`[14] Devrait retourner une erreur lors de l'ajout d'un e-mail à un utilisateur inactif`, async () => {
         await request(app.getHttpServer())
           .post('/graphql')
           .send({
@@ -305,8 +304,29 @@ describe('Tests e2e', () => {
             expect(res.body.errors[0].message).toContain(
               "Impossible d'ajouter un e-mail à un utilisateur inactif",
             );
-            expect(res.body.errors[0].extensions.originalError.statusCode).toBe(403);
+            expect(res.body.errors[0].extensions.originalError.statusCode).toBe(
+              403,
+            );
           });
+      });
+
+      describe('[Mutation] removeEmail', () => {
+        it(`[15] Devrait supprimer un e-mail`, () => {
+          const emailIdToRemove = knownUser.emails[0].id;
+
+          return request(app.getHttpServer())
+            .post('/graphql')
+            .send({
+              query: `mutation {removeEmail(emailId: "${emailIdToRemove}")}`,
+            })
+            .expect(200)
+            .expect((res) => {
+              expect(res.body.errors).toBeUndefined();
+              expect(res.body.data.removeEmail).toEqual(emailIdToRemove);
+            });
+
+          // on peut aussi vérifier que l'email n'existe plus en base de données
+        });
       });
     });
   });
