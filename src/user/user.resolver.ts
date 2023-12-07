@@ -43,19 +43,20 @@ export class UserResolver {
     @Parent() user: User,
     @Args() filters: EmailFiltersArgs,
   ): Promise<UserEmail[]> {
+    let addressFilters: string[] = [];
+
+    if (filters.address?.equal) {
+      addressFilters.push(filters.address.equal);
+    }
+
+    if (filters.address?.in?.length > 0) {
+      addressFilters = [...addressFilters, ...filters.address.in];
+    }
+
     const where: FindOptionsWhere<EmailEntity> = {
       userId: Equal(user.id),
+      ...(addressFilters.length > 0 && { address: In(addressFilters) }),
     };
-
-    if (filters.address) {
-      if (filters.address.equal) {
-        where.address = Equal(filters.address.equal);
-      }
-
-      if (filters.address.in?.length > 0) {
-        where.address = In(filters.address.in);
-      }
-    }
 
     return this.emailRepository.find({
       where,
