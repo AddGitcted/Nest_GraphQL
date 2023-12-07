@@ -8,12 +8,13 @@ import {
   Resolver,
 } from '@nestjs/graphql';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Equal, FindOptionsWhere, In, Repository } from 'typeorm';
+import { Equal, Repository } from 'typeorm';
 import { EmailFiltersArgs, UserEmail } from '../email/email.types';
 import { EmailEntity } from '../email/email.entity';
 import { UserId } from './user.interfaces';
 import { UserService } from './user.service';
 import { AddUser, User, UserIdArgs } from './user.types';
+import { createEmailFilter } from '../email/email.utils';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -43,19 +44,9 @@ export class UserResolver {
     @Parent() user: User,
     @Args() filters: EmailFiltersArgs,
   ): Promise<UserEmail[]> {
-    let addressFilters: string[] = [];
-
-    if (filters.address?.equal) {
-      addressFilters.push(filters.address.equal);
-    }
-
-    if (filters.address?.in?.length > 0) {
-      addressFilters = [...addressFilters, ...filters.address.in];
-    }
-
-    const where: FindOptionsWhere<EmailEntity> = {
+    const where = {
       userId: Equal(user.id),
-      ...(addressFilters.length > 0 && { address: In(addressFilters) }),
+      ...createEmailFilter(filters),
     };
 
     return this.emailRepository.find({
