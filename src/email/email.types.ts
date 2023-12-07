@@ -1,5 +1,5 @@
 import { ArgsType, Field, ID, InputType, ObjectType } from '@nestjs/graphql';
-import { IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 import { Maybe } from 'graphql/jsutils/Maybe';
 import { IEmail, IEmailFilters } from './email.interfaces';
 
@@ -44,4 +44,18 @@ export class EmailIdArgs {
   @IsNotEmpty({ message: `L'identifiant de l'email doit être défini` })
   @Field(() => String)
   emailId: string;
+}
+
+
+@InputType()
+export class IAddEmail{
+  @IsNotEmpty()
+  @IsEmail()
+  @Field(() => String)
+  address: string;
+
+  @IsNotEmpty()
+  @IsUUID()
+  @Field(() => ID)
+  userId: string;
 }

@@ -263,5 +263,51 @@ describe('Tests e2e', () => {
           });
       });
     });
+
+    describe('[Mutation] addEmail', () => {
+      it(`[13] Devrait ajouter un nouvel e-mail à un utilisateur actif`, () => {
+        const newEmail = {
+          userId: knownUserId,
+          address: 'test4@upcse-integration.coop',
+        };
+
+        return request(app.getHttpServer())
+          .post('/graphql')
+          .send({
+            query: `mutation {addEmail(newEmail: {userId: "${newEmail.userId}", address: "${newEmail.address}"}){id address}}`,
+          })
+          .expect(200)
+          .expect((res) => {
+            expect(res.body.errors).toBeUndefined();
+            expect(res.body.data.addEmail).toBeDefined();
+            expect(res.body.data.addEmail.address).toBe(newEmail.address);
+          });
+      });
+      it(`[14] Devrait retourner une erreur lors de l'ajout d'un e-mail à un utilisateur inactif`,  async () => {
+        await request(app.getHttpServer())
+          .post('/graphql')
+          .send({
+            query: `mutation {deactivateUser(userId: "${knownUserId}")}`,
+          });
+
+        const newEmail = {
+          userId: knownUserId,
+          address: 'test5@upcse-integration.coop',
+        };
+
+        return request(app.getHttpServer())
+          .post('/graphql')
+          .send({
+            query: `mutation {addEmail(newEmail: {userId: "${newEmail.userId}", address: "${newEmail.address}"}){id address}}`,
+          })
+          .expect((res) => {
+            expect(res.body.errors).toBeDefined();
+            expect(res.body.errors[0].message).toContain(
+              "Impossible d'ajouter un e-mail à un utilisateur inactif",
+            );
+            expect(res.body.errors[0].extensions.originalError.statusCode).toBe(403);
+          });
+      });
+    });
   });
 });

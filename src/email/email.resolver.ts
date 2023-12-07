@@ -1,13 +1,17 @@
-import { Mutation } from '@nestjs/graphql';
+import { ID, Mutation } from '@nestjs/graphql';
 import {
   Args,
-  ID,
   Parent,
   Query,
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import { EmailFiltersArgs, EmailIdArgs, UserEmail } from './email.types';
+import {
+  EmailFiltersArgs,
+  EmailIdArgs,
+  IAddEmail,
+  UserEmail,
+} from './email.types';
 import { User } from '../user/user.types';
 import { EmailService } from './email.service';
 import { createEmailFilter } from './email.utils';
@@ -15,6 +19,7 @@ import { Repository } from 'typeorm';
 import { EmailEntity } from './email.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from '../user/user.service';
+import { EmailId } from './email.interfaces';
 
 @Resolver(() => UserEmail)
 export class EmailResolver {
@@ -23,9 +28,8 @@ export class EmailResolver {
     private readonly _userService: UserService,
     @InjectRepository(EmailEntity)
     private readonly emailRepository: Repository<EmailEntity>,
-
   ) {}
-  
+
   @Query(() => UserEmail, { name: 'email' })
   getEmail(@Args() { emailId }: EmailIdArgs): Promise<UserEmail> {
     return this._service.get(emailId);
@@ -44,5 +48,12 @@ export class EmailResolver {
   @ResolveField(() => User, { name: 'user' })
   async getUser(@Parent() parent: UserEmail): Promise<User> {
     return this._userService.get(parent.userId);
+  }
+
+  @Mutation(() => UserEmail)
+  async addEmail(
+    @Args('newEmail') newEmail: IAddEmail,
+  ): Promise<UserEmail> {
+    return this._service.addEmail(newEmail);
   }
 }
